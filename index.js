@@ -92,13 +92,12 @@ function draw(frame) {
   process.stdout.write(out);
 }
 
-const current = { ffmpeg: null, audio: null };
+const current = { forceFinish: null };
 
 let quit = false;
 
 function killCurrent() {
-  current.ffmpeg?.kill("SIGTERM");
-  current.audio?.kill("SIGTERM");
+  current.forceFinish?.();
 }
 
 function playOnce() {
@@ -129,8 +128,7 @@ function playOnce() {
       stdio: ["ignore", "pipe", "ignore"]
     });
 
-    current.ffmpeg = ffmpeg;
-    current.audio = audio;
+    current.forceFinish = finish;
 
     function maybeFinish() {
       if (finished) return;
@@ -192,8 +190,7 @@ function playOnce() {
       ffmpeg.kill("SIGTERM");
       audio.kill("SIGTERM");
 
-      current.ffmpeg = null;
-      current.audio = null;
+      current.forceFinish = null;
 
       resolve();
     }
