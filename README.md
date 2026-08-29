@@ -1,4 +1,3 @@
-```markdown
 # anif
 
 Play a video as live color ASCII art, with audio, in your terminal.
@@ -38,7 +37,6 @@ There's no install script for Windows — it has to be done manually:
 2. Install ffmpeg with winget (Command Prompt or PowerShell):
 
    ```
-
    winget install --id Gyan.FFmpeg --version 9.0.1 --exact
    ```
 
@@ -66,5 +64,4 @@ Press `q` or `Ctrl+C` to quit. The video loops automatically until you do.
 
 ```
 npm uninstall -g anif
-```
 ```
