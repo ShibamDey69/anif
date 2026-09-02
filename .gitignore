@@ -1,2 +1,14 @@
-/node_modules/
-/video.mp4
+anif
+*.o
+*.obj
+obj/
+build/
+*.mp4
+*.mkv
+*.webm
+*.tar.xz
+*.tar.gz
+*.zip
+.DS_Store
+node_modules/
+
