@@ -44,7 +44,8 @@ void term_enter_alt_screen(void) {
     if (!alt_screen_active) {
         /* Enter alternate screen buffer, disable auto-wrap (\x1b[?7l), and cursor home */
         const char *enter_alt = "\x1b[?1049h\x1b[?7l\x1b[H";
-        (void)write(STDOUT_FILENO, enter_alt, strlen(enter_alt));
+        ssize_t wr = write(STDOUT_FILENO, enter_alt, strlen(enter_alt));
+        (void)wr;
         alt_screen_active = true;
     }
 }
@@ -53,7 +54,8 @@ void term_exit_alt_screen(void) {
     if (alt_screen_active) {
         /* Re-enable auto-wrap (\x1b[?7h) and exit alternate screen buffer */
         const char *exit_alt = "\x1b[?7h\x1b[?1049l";
-        (void)write(STDOUT_FILENO, exit_alt, strlen(exit_alt));
+        ssize_t wr = write(STDOUT_FILENO, exit_alt, strlen(exit_alt));
+        (void)wr;
         alt_screen_active = false;
     }
 }
@@ -61,7 +63,8 @@ void term_exit_alt_screen(void) {
 void term_restore(void) {
     if (cursor_hidden) {
         const char *restore_str = "\x1b[?25h\x1b[?7h\x1b[0m";
-        (void)write(STDOUT_FILENO, restore_str, strlen(restore_str));
+        ssize_t wr = write(STDOUT_FILENO, restore_str, strlen(restore_str));
+        (void)wr;
         cursor_hidden = false;
     }
     if (alt_screen_active) {
@@ -121,19 +124,22 @@ void term_get_size(int *cols, int *rows) {
 
 void term_hide_cursor(void) {
     const char *hide_str = "\x1b[?25l";
-    (void)write(STDOUT_FILENO, hide_str, strlen(hide_str));
+    ssize_t wr = write(STDOUT_FILENO, hide_str, strlen(hide_str));
+    (void)wr;
     cursor_hidden = true;
 }
 
 void term_show_cursor(void) {
     const char *show_str = "\x1b[?25h";
-    (void)write(STDOUT_FILENO, show_str, strlen(show_str));
+    ssize_t wr = write(STDOUT_FILENO, show_str, strlen(show_str));
+    (void)wr;
     cursor_hidden = false;
 }
 
 void term_clear_screen(void) {
     const char *clear_str = "\x1b[2J\x1b[H";
-    (void)write(STDOUT_FILENO, clear_str, strlen(clear_str));
+    ssize_t wr = write(STDOUT_FILENO, clear_str, strlen(clear_str));
+    (void)wr;
 }
 
 int term_check_key(void) {

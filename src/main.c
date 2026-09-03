@@ -12,6 +12,32 @@
 volatile sig_atomic_t g_signal_received = 0;
 volatile sig_atomic_t g_terminal_resized = 0;
 
+static void print_ffmpeg_setup_help(void) {
+    fprintf(stderr, "\n\033[1;33m[anif]\033[0m ffmpeg was not found (ffprobe and ffplay are optional but recommended).\n\n");
+    fprintf(stderr, "Install it with your platform's package manager:\n\n");
+#if defined(__APPLE__)
+    fprintf(stderr, "  brew install ffmpeg\n");
+#elif defined(__ANDROID__)
+    fprintf(stderr, "  pkg install ffmpeg ffplay\n");
+#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+    fprintf(stderr, "  winget install ffmpeg\n");
+#elif defined(__linux__)
+    fprintf(stderr, "  sudo apt install ffmpeg       # Debian / Ubuntu\n");
+    fprintf(stderr, "  sudo dnf install ffmpeg       # Fedora / RHEL\n");
+    fprintf(stderr, "  sudo pacman -S ffmpeg         # Arch\n");
+    fprintf(stderr, "  sudo zypper install ffmpeg    # openSUSE\n");
+    fprintf(stderr, "  sudo apk add ffmpeg           # Alpine\n");
+#else
+    fprintf(stderr, "  See https://ffmpeg.org/download.html\n");
+#endif
+    fprintf(stderr, "\nOr just run the bundled installer, which does this for you:\n");
+    fprintf(stderr, "  ./install.sh          (Linux / macOS / Termux)\n");
+    fprintf(stderr, "  install.ps1           (Windows, in PowerShell)\n");
+    fprintf(stderr, "\nAlready have ffmpeg somewhere else? Point anif at it directly:\n");
+    fprintf(stderr, "  anif --ffmpeg <path> [--ffplay <path>] [--ffprobe <path>] video.mp4\n");
+    fprintf(stderr, "  or set ANIF_FFMPEG_PATH / ANIF_FFPLAY_PATH / ANIF_FFPROBE_PATH\n\n");
+}
+
 static void print_usage(const char *prog) {
     printf("anif v%s — Play video as live color ASCII / ANSI art in your terminal\n\n", ANIF_VERSION);
     printf("Usage: %s [options] <video_file>\n\n", prog);
@@ -26,7 +52,7 @@ static void print_usage(const char *prog) {
     printf("  -l, --loop [N]          Loop playback (default: infinite, or N times)\n");
     printf("      --no-audio          Disable audio playback\n");
     printf("      --check             Check and display detected FFmpeg binary paths\n");
-    printf("      --download-ffmpeg   Download standalone static FFmpeg binary\n");
+    printf("      --download-ffmpeg   Show how to install ffmpeg for your platform\n");
     printf("      --ffmpeg <path>     Explicit path to ffmpeg binary\n");
     printf("      --ffplay <path>     Explicit path to ffplay binary (optional)\n");
     printf("      --ffprobe <path>    Explicit path to ffprobe binary (optional)\n");
@@ -105,7 +131,7 @@ int main(int argc, char **argv) {
                 opts.audio_enabled = false;
                 break;
             case 1002: /* --download-ffmpeg */
-                opts.auto_download = true;
+                opts.show_ffmpeg_help = true;
                 break;
             case 1003: /* --ffmpeg */
                 snprintf(opts.ffmpeg_path, sizeof(opts.ffmpeg_path), "%s", optarg);
@@ -120,7 +146,7 @@ int main(int argc, char **argv) {
                 check_only = true;
                 break;
             case 'v':
-                printf("anif version %s (C native, single static ffmpeg binary)\n", ANIF_VERSION);
+                printf("anif version %s\n", ANIF_VERSION);
                 return 0;
             case 'h':
                 print_usage(argv[0]);
@@ -140,16 +166,9 @@ int main(int argc, char **argv) {
         return (ret == 0 && opts.ffmpeg_path[0] != '\0') ? 0 : 1;
     }
 
-    if (opts.auto_download) {
-        int ret = download_static_ffmpeg(NULL);
-        if (ret != 0) {
-            fprintf(stderr, "Failed to download static ffmpeg binary.\n");
-            return 1;
-        }
-        if (optind >= argc) {
-            printf("\nSetup complete. You can now run: anif <video_file>\n");
-            return 0;
-        }
+    if (opts.show_ffmpeg_help) {
+        print_ffmpeg_setup_help();
+        return 0;
     }
 
     if (optind >= argc) {
@@ -167,28 +186,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* Locate ffmpeg (single static binary) */
+    /* Locate ffmpeg (required), ffplay and ffprobe (optional) */
     if (find_binaries(&opts) != 0 || opts.ffmpeg_path[0] == '\0') {
-        if (isatty(STDIN_FILENO)) {
-            printf("\033[1;33m[anif]\033[0m FFmpeg binary was not found.\n");
-            printf("Would you like to automatically download a standalone static FFmpeg binary to %s? [Y/n]: ",
-                   get_default_static_dir());
-            fflush(stdout);
-
-            char answer[32] = {0};
-            if (fgets(answer, sizeof(answer), stdin) && (answer[0] == 'y' || answer[0] == 'Y' || answer[0] == '\n')) {
-                if (download_static_ffmpeg(NULL) == 0) {
-                    find_binaries(&opts);
-                }
-            }
-        }
-
-        if (opts.ffmpeg_path[0] == '\0') {
-            fprintf(stderr, "\n\033[1;31manif needs a static ffmpeg binary to run.\033[0m\n\n");
-            fprintf(stderr, "Run: anif --download-ffmpeg\n");
-            fprintf(stderr, "Or install ffmpeg using your package manager.\n");
-            return 1;
-        }
+        print_ffmpeg_setup_help();
+        return 1;
     }
 
     /* Setup signal handling and terminal raw mode */

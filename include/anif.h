@@ -18,7 +18,7 @@ typedef struct {
     bool audio_enabled;
     bool use_luminance;
     bool use_half_block;    /* 2x vertical resolution using upper half block '▀' */
-    bool auto_download;
+    bool show_ffmpeg_help;  /* --download-ffmpeg: print per-platform install instructions */
     char ffmpeg_path[1024]; /* Required single binary */
     char ffplay_path[1024]; /* Optional audio player */
     char ffprobe_path[1024];/* Optional metadata probe */
@@ -36,9 +36,9 @@ typedef struct {
     size_t frame_bytes;
 } anif_meta_t;
 
-/* Binary discovery & static ffmpeg management */
+/* Binary discovery. ffmpeg/ffprobe/ffplay themselves are installed with the
+ * platform's package manager (see install.sh / install.ps1), not by anif. */
 int find_binaries(anif_options_t *opts);
-int download_static_ffmpeg(const char *target_dir);
 const char *get_default_static_dir(void);
 
 /* Terminal management */

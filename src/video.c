@@ -363,7 +363,13 @@ int video_play_stream(const anif_options_t *opts, const anif_meta_t *meta, volat
             /* Sleep in small 1-2ms increments for instant key responsive exit */
             while (sleep_us > 1000 && !*should_quit && g_signal_received == 0) {
                 uint64_t step = (sleep_us > 2000) ? 2000 : sleep_us;
-                usleep((useconds_t)step);
+                /* nanosleep is the POSIX.1-2008 replacement for the
+                 * obsolete usleep(); step is always < 1ms-scale here so a
+                 * zero-second, sub-second timespec is all that's needed. */
+                struct timespec step_ts;
+                step_ts.tv_sec = 0;
+                step_ts.tv_nsec = (long)(step * 1000);
+                nanosleep(&step_ts, NULL);
                 int k = term_check_key();
                 if (k == 'q' || k == 'Q' || k == 3 || k == 27) {
                     *should_quit = true;

@@ -16,7 +16,7 @@ SRCS = src/main.c src/terminal.c src/download.c src/render.c src/video.c
 OBJS = $(SRCS:.c=.o)
 TARGET = anif
 
-.PHONY: all clean install uninstall fetch-ffmpeg test
+.PHONY: all clean install uninstall prebuilt distclean
 
 all: $(TARGET)
 
@@ -36,9 +36,6 @@ uninstall:
 	@echo "Uninstalling $(TARGET) from $(DESTDIR)$(BINDIR)..."
 	@rm -f $(DESTDIR)$(BINDIR)/$(TARGET)
 	@echo "Uninstalled."
-
-fetch-ffmpeg: $(TARGET)
-	@./$(TARGET) --download-ffmpeg
 
 prebuilt: $(TARGET)
 	@mkdir -p bin
